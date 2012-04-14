@@ -1,0 +1,46 @@
+digraph RGL__DirectedAdjacencyGraph {
+    root [
+        fontsize = 8,
+        label = root
+    ]
+
+    sex [
+        fontsize = 8,
+        label = sex
+    ]
+
+    bottom [
+        fontsize = 8,
+        label = bottom
+    ]
+
+    hair [
+        fontsize = 8,
+        label = hair
+    ]
+
+    nose [
+        fontsize = 8,
+        label = nose
+    ]
+
+    root -> sex [
+        fontsize = 8
+    ]
+
+    root -> bottom [
+        fontsize = 8
+    ]
+
+    root -> hair [
+        fontsize = 8
+    ]
+
+    root -> nose [
+        fontsize = 8
+    ]
+
+    sex -> bottom [
+        fontsize = 8
+    ]
+}
