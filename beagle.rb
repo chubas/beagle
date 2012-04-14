@@ -1,5 +1,6 @@
 require 'rubygems'
 require 'variable'
+require 'colorize'
 require 'rgl/adjacency'
 require 'rgl/dot'
 require 'rgl/topsort'
@@ -47,16 +48,19 @@ module Beagle
 
     end
 
-    def run!
-      @current_generation += 1
-      @variables.topsort_iterator.each do |variable|
-        puts "Evaluating #{variable.name}"
-        next if variable.root?
+    def run!(generations)
+      generations.times do
+        puts "Generation: #@current_generation, variance: #{variance_for_generation}"
+        @variables.topsort_iterator.each do |variable|
+          puts "Evaluating #{variable.name}"
+          next if variable.root?
 
-        @generation_results[variable] = variable.calculate_next_generation!(@generation_results)
+          @generation_results[variable] = variable.calculate_next_generation!(@generation_results, variance_for_generation)
 
+        end
+        ___puts_generation
+        @current_generation += 1
       end
-      ___puts_generation
     end
 
     def ___puts_generation
@@ -89,6 +93,10 @@ module Beagle
       RGL::DirectedAdjacencyGraph[*graph_edges.flatten]
     end
 
+    def variance_for_generation
+      Math::E ** -(0.2 * @current_generation)
+    end
+
     def next_generation
 
     end
@@ -98,4 +106,4 @@ module Beagle
 end
 
 machine = Beagle::Machine.new
-machine.run!
+machine.run!(10)
