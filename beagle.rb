@@ -7,7 +7,7 @@ require 'rgl/topsort'
 module Beagle
   class Machine
 
-    attr_accessor :rules, :rule_list
+    attr_accessor :variables, :generation_results
 
     def initialize
       nose = Beagle::Variable.new(:nose,
@@ -30,29 +30,39 @@ module Beagle
       bottom = Beagle::Variable.new(:bottom,
           :jeans  => { :frequency => 40 },
           :shorts => { :frequency => 30 },
-          :skirt  => { :frequency => 30, :conditions => { sex => :male } }
+          :skirt  => { :frequency => 30, :conditions => { sex => :female } }
       )
 
-      @rules = build_graph([nose, hair, sex, bottom])
+      @variables = build_graph([nose, hair, sex, bottom])
 
-      @rule_list = {
+      @generation_results = {
           nose   => nil,
           hair   => nil,
           sex    => nil,
           bottom => nil
       }
 
-      @rules.write_to_graphic_file('jpg')
+      @variables.write_to_graphic_file('jpg')
+      @current_generation = 0
 
     end
 
     def run!
-      @current_generation = {}
-      @rules.topsort_iterator.each do |rule|
-        puts rule.name
-        next if rule.root?
+      @current_generation += 1
+      @variables.topsort_iterator.each do |variable|
+        puts "Evaluating #{variable.name}"
+        next if variable.root?
 
-        result = @rule_list[rule] = rule.calculate_next_generation!(@rule_list)
+        @generation_results[variable] = variable.calculate_next_generation!(@generation_results)
+
+      end
+      ___puts_generation
+    end
+
+    def ___puts_generation
+      puts "GENERATION: #@current_generation"
+      @generation_results.each do |variable, result|
+        puts "   --- #{variable.name} : #{result}"
       end
     end
 
