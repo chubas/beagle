@@ -38,7 +38,7 @@ module Beagle
 
         result
       else
-        puts "--- Didn't change'"
+        # puts "--- Didn't change'"
         previous_results[self]
       end
     end

@@ -10,38 +10,10 @@ module Beagle
 
     attr_accessor :variables, :generation_results
 
-    def initialize
-      nose = Beagle::Variable.new(:nose,
-          :small  => { :frequency => 25 },
-          :normal => { :frequency => 50 },
-          :big    => { :frequency => 25 }
-      )
+    def initialize(rules)
+      @variables = build_graph(rules)
 
-      hair = Beagle::Variable.new(:hair,
-          :black  => { :frequency => 30 },
-          :brown  => { :frequency => 40 },
-          :blond  => { :frequency => 30 }
-      )
-
-      sex = Beagle::Variable.new(:sex,
-          :male   => { :frequency => 50 },
-          :female => { :frequency => 50 }
-      )
-
-      bottom = Beagle::Variable.new(:bottom,
-          :jeans  => { :frequency => 40 },
-          :shorts => { :frequency => 30 },
-          :skirt  => { :frequency => 30, :conditions => { sex => :female } }
-      )
-
-      @variables = build_graph([nose, hair, sex, bottom])
-
-      @generation_results = {
-          nose   => nil,
-          hair   => nil,
-          sex    => nil,
-          bottom => nil
-      }
+      @generation_results = rules.inject({}) { |hash, rule| hash.merge(rule => nil) }
 
       @variables.write_to_graphic_file('jpg')
       @current_generation = 0
@@ -97,13 +69,35 @@ module Beagle
       Math::E ** -(0.2 * @current_generation)
     end
 
-    def next_generation
-
-    end
-
   end
 
 end
 
-machine = Beagle::Machine.new
+
+nose = Beagle::Variable.new(:nose,
+    :small  => { :frequency => 25 },
+    :normal => { :frequency => 50 },
+    :big    => { :frequency => 25 }
+)
+
+hair = Beagle::Variable.new(:hair,
+    :black  => { :frequency => 30 },
+    :brown  => { :frequency => 40 },
+    :blond  => { :frequency => 30 }
+)
+
+sex = Beagle::Variable.new(:sex,
+    :male   => { :frequency => 50 },
+    :female => { :frequency => 50 }
+)
+
+bottom = Beagle::Variable.new(:bottom,
+    :jeans  => { :frequency => 40 },
+    :shorts => { :frequency => 30 },
+    :skirt  => { :frequency => 30, :conditions => { sex => :female } }
+)
+
+rules = [nose, hair, sex, bottom]
+
+machine = Beagle::Machine.new(rules)
 machine.run!(10)
