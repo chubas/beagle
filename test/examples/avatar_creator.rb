@@ -45,7 +45,7 @@ def generate_sample_run!
   rules = [nose, hair, sex, bottom, glasses]
 
   machine = Beagle::Machine.new(rules)
-  
+
   current_gen = {}
   0.upto(10) do |generation|
     puts "Generation #{generation}"
