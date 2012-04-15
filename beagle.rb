@@ -14,25 +14,15 @@ module Beagle
       @variables = build_graph(rules)
     end
 
-    def run(samples, generation, starting_point)
-      samples.times.map do
-
+    def run(number_of_samples, generation, starting_point)
+      number_of_samples.times.map do
         new_result_set = starting_point.dup
         @variables.topsort_iterator.each do |variable|
           next if variable.root?
 
           new_result_set[variable] = variable.calculate_next_generation!(new_result_set, variance_for_generation(generation))
         end
-        ___puts_results(new_result_set)
         new_result_set
-
-      end
-    end
-
-    def ___puts_results(results)
-      puts " ==="
-      results.each do |variable, result|
-        puts "   --- #{variable.name} : #{result}"
       end
     end
 
@@ -58,6 +48,14 @@ module Beagle
 
   end
 
+end
+
+# Debug method
+def ___puts_results(results)
+  puts " ==="
+  results.each do |variable, result|
+    puts "   --- #{variable.name} : #{result}"
+  end
 end
 
 
@@ -100,8 +98,11 @@ current_gen = {}
   puts "Generation #{generation}"
   results = machine.run(9, generation, current_gen)
   current_gen = results.choice
+  results.each do |result|
+    ___puts_results(result)
+  end
   puts "~~~~~~~~~"
   puts "Winner from generation is:"
-  machine.___puts_results(current_gen)
+    ___puts_results(current_gen)
   puts "~~~~~~~~~"
 end
