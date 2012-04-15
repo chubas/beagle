@@ -4,7 +4,6 @@ module Beagle
     attr_accessor :rules, :name
 
     def initialize(name, rules = {})
-      puts "Rule: #{name}"
       @name  = name
       @rules = rules
     end
@@ -23,7 +22,6 @@ module Beagle
         candidates = @rules.select do |name, rules|
           if rules[:conditions]
             rules[:conditions].all? do |cond_rule, expected_result|
-              puts "-- COND #{previous_results[cond_rule]} == #{expected_result}"
               previous_results[cond_rule] == expected_result
             end
           else
@@ -31,14 +29,8 @@ module Beagle
           end
         end
 
-        puts "Candidates: #{candidates.inspect}"
-
-        result = pick_weighted_choice(candidates)
-        puts "Winner is #{result}"
-
-        result
+        pick_weighted_choice(candidates)
       else
-        # puts "--- Didn't change'"
         previous_results[self]
       end
     end
@@ -47,7 +39,7 @@ module Beagle
       conditions = rules[previous_results[self]][:conditions]
       conditions && conditions.any? do |cond_rule, expected_result|
         previous_results[cond_rule] != expected_result
-      end.tap{|pc| puts "Preconditions changed!" if pc }
+      end
     end
 
     def pick_weighted_choice(candidates)

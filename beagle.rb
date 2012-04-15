@@ -12,32 +12,26 @@ module Beagle
 
     def initialize(rules)
       @variables = build_graph(rules)
-
-      @generation_results = rules.inject({}) { |hash, rule| hash.merge(rule => nil) }
-
-      @variables.write_to_graphic_file('jpg')
-      @current_generation = 0
-
     end
 
-    def run!(generations)
-      generations.times do
-        puts "Generation: #@current_generation, variance: #{variance_for_generation}"
+    def run(samples, generation, starting_point)
+      samples.times.map do
+
+        new_result_set = starting_point.dup
         @variables.topsort_iterator.each do |variable|
-          puts "Evaluating #{variable.name}"
           next if variable.root?
 
-          @generation_results[variable] = variable.calculate_next_generation!(@generation_results, variance_for_generation)
-
+          new_result_set[variable] = variable.calculate_next_generation!(new_result_set, variance_for_generation(generation))
         end
-        ___puts_generation
-        @current_generation += 1
+        ___puts_results(new_result_set)
+        new_result_set
+
       end
     end
 
-    def ___puts_generation
-      puts "GENERATION: #@current_generation"
-      @generation_results.each do |variable, result|
+    def ___puts_results(results)
+      puts " ==="
+      results.each do |variable, result|
         puts "   --- #{variable.name} : #{result}"
       end
     end
@@ -52,7 +46,7 @@ module Beagle
           if rule[:conditions]
             dependent = true
             rule[:conditions].each do |key, _|
-              graph_edges <<[key, var]
+              graph_edges << [key, var]
             end
           end
 
@@ -65,8 +59,8 @@ module Beagle
       RGL::DirectedAdjacencyGraph[*graph_edges.flatten]
     end
 
-    def variance_for_generation
-      Math::E ** -(0.2 * @current_generation)
+    def variance_for_generation(generation)
+      Math::E ** -(0.2 * generation)
     end
 
   end
@@ -100,4 +94,13 @@ bottom = Beagle::Variable.new(:bottom,
 rules = [nose, hair, sex, bottom]
 
 machine = Beagle::Machine.new(rules)
-machine.run!(10)
+current_gen = {}
+0.upto(10) do |generation|
+  puts "Generation #{generation}"
+  results = machine.run(9, generation, current_gen)
+  current_gen = results.choice
+  puts "~~~~~~~~~"
+  puts "Winner from generation is:"
+  machine.___puts_results(current_gen)
+  puts "~~~~~~~~~"
+end
