@@ -8,7 +8,7 @@ require 'rgl/topsort'
 module Beagle
   class Machine
 
-    attr_accessor :variables, :generation_results
+    attr_accessor :variables
 
     def initialize(rules)
       @variables = build_graph(rules)
@@ -36,24 +36,17 @@ module Beagle
       end
     end
 
-    def build_graph(variables)
+    def build_graph(rules)
       root = Beagle::Variable.new(:root)
       graph_edges = []
-      variables.each do |var|
-        var.rules.each do |name, rule|
-
-          dependent = false
-          if rule[:conditions]
-            dependent = true
-            rule[:conditions].each do |key, _|
-              graph_edges << [key, var]
+      rules.each do |rule|
+          if rule.dependencies.empty?
+            graph_edges << [root, rule]
+          else
+            rule.dependencies.each do |dependency|
+              graph_edges << [dependency, rule]
             end
           end
-
-          unless dependent
-            graph_edges << [root, var]
-          end
-        end
       end
 
       RGL::DirectedAdjacencyGraph[*graph_edges.flatten]
@@ -88,10 +81,18 @@ sex = Beagle::Variable.new(:sex,
 bottom = Beagle::Variable.new(:bottom,
     :jeans  => { :frequency => 40 },
     :shorts => { :frequency => 30 },
-    :skirt  => { :frequency => 30, :conditions => { sex => :female } }
+    :skirt  => { :frequency => 30,:conditions => { sex => :female } }
 )
 
-rules = [nose, hair, sex, bottom]
+glasses = Beagle::Variable.new(:glasses,
+    :none   => { :frequency => 60 },
+    :sun    => { :frequency => 40,
+                 :conditions => proc{ |results| results[bottom] == :shorts || results[nose] == :snormal || results[nose] == :big }, # Weird rules
+                 :depends_on => [bottom, nose]
+               }
+)
+
+rules = [nose, hair, sex, bottom, glasses]
 
 machine = Beagle::Machine.new(rules)
 current_gen = {}
