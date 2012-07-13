@@ -7,8 +7,8 @@ Gem::Specification.new do |s|
   s.name = "beagle"
   s.version = Beagle::VERSION
   s.platform = Gem::Platform::RUBY
-  s.authors = ["Rubén Medellín"],
-  s.email = %w(chubas@freshout.us),
+  s.authors = ["Rubén Medellín"]
+  s.email = %w(chubas@freshout.us)
   s.homepage = ""
   s.summary = %q(Beagle is a library to provide approximations to an open-ended result given generational variances, given a set of constraints)
   s.description = %q(Generational approximation library)
