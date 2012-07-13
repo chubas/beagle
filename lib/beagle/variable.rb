@@ -4,11 +4,22 @@ module Beagle
     attr_accessor :rules, :name
     attr_reader :dependencies
 
-    def initialize(name, rules = {})
+    def initialize(name, rules = {}, variable_options = {})
       @name  = name
-      @rules = rules
+      @rules = normalize_rules(rules)
+      @variable_options = variable_options
       @dependencies = get_dependencies
       normalize_conditions!
+    end
+
+    def normalize_rules(rules)
+      rules.update(rules) do |_, value|
+        if value.is_a?(Numeric)
+          { :weight => value }
+        else
+          value
+        end
+      end
     end
 
     def normalize_conditions!
@@ -23,13 +34,16 @@ module Beagle
     end
 
     def get_dependencies
-      @rules.map do |_, rules|
-        if rules[:depends_on]
-          rules[:depends_on]
-        elsif rules[:conditions]
-          rules[:conditions].keys
+      dependencies = []
+      dependencies += @variable_options[:depends_on].to_a
+      @rules.each do |_, rule|
+        if rule[:depends_on]
+          dependencies += rule[:depends_on]
+        elsif rule[:conditions]
+          dependencies += rule[:conditions].keys
         end
-      end.flatten.compact
+      end
+      dependencies.flatten.compact.uniq
     end
 
     def root?
@@ -42,6 +56,9 @@ module Beagle
     alias inspect to_s
 
     def calculate_next_generation!(previous_results, variance)
+      if @variable_options[:only_if] && !@variable_options[:only_if].call(previous_results)
+        return nil
+      end
       if rand < variance || !previous_results[self] || preconditions_changed?(previous_results)
         candidates = @rules.select do |_, rules|
           if rules[:conditions]
@@ -66,11 +83,11 @@ module Beagle
     end
 
     def pick_weighted_choice(candidates)
-      total_weight = candidates.inject(0){ |total, c| total + c[1][:frequency] }
+      total_weight = candidates.inject(0){ |total, c| total + c[1][:weight] }
       point = rand(total_weight)
 
       candidates.each do |name, options|
-        weight = options[:frequency]
+        weight = options[:weight]
         return name if weight >= point
         point -= weight
       end

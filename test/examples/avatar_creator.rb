@@ -12,45 +12,56 @@ def generate_sample_run!
 
 
   nose = Beagle::Variable.new(:nose,
-                              :small  => { :frequency => 25 },
-                              :normal => { :frequency => 50 },
-                              :big    => { :frequency => 25 }
+                              :small  => 25,
+                              :normal => 50,
+                              :big    => 25
   )
 
   hair = Beagle::Variable.new(:hair,
-                              :black  => { :frequency => 30 },
-                              :brown  => { :frequency => 40 },
-                              :blond  => { :frequency => 30 }
+                              :black => 30,
+                              :brown => 40,
+                              :blond => 30
   )
 
   sex = Beagle::Variable.new(:sex,
-                             :male   => { :frequency => 50 },
-                             :female => { :frequency => 50 }
+                             :male   => 50,
+                             :female => 50
   )
 
   bottom = Beagle::Variable.new(:bottom,
-                                :jeans  => { :frequency => 40 },
-                                :shorts => { :frequency => 30 },
-                                :skirt  => { :frequency => 30,:conditions => { sex => :female } }
+                                :jeans  => 40,
+                                :shorts => 30,
+                                :skirt  => { :weight => 30, :conditions => { sex => :female } }
   )
 
   glasses = Beagle::Variable.new(:glasses,
-                                 :none   => { :frequency => 60 },
-                                 :sun    => { :frequency => 40,
-                                              :conditions => proc{ |results| results[bottom] == :shorts || results[nose] == :snormal || results[nose] == :big }, # Weird rules
-                                              :depends_on => [bottom, nose]
+                                 :none => 60,
+                                 :sun  => { :weight     => 40,
+                                            :conditions => proc { |results| results[bottom] == :shorts || results[nose] == :normal || results[nose] == :big }, # Weird rules
+                                            :depends_on => [bottom, nose]
                                  }
   )
 
-  rules = [nose, hair, sex, bottom, glasses]
+  glasses_color = Beagle::Variable.new(:g_color,
+                                        {
+                                          :black => 60,
+                                          :brown => 40,
+                                          :red   => 20,
+                                          :white => 20
+                                        },
+                                        :only_if => proc { |results| results[glasses] == :sun },
+                                        :depends_on => [glasses]
+  )
+
+  rules = [nose, hair, sex, bottom, glasses, glasses_color]
 
   machine = Beagle::Machine.new(rules)
 
-  current_gen = {}
+  current_gen = { }
   0.upto(10) do |generation|
     puts "Generation #{generation}"
     puts "Variance is #{machine.variance_for_generation(generation)}"
-    results = machine.run(9, generation, current_gen)
+    results     = machine.run(9, generation, current_gen)
     current_gen = results.choice
     results.each do |result|
       ___puts_results(result)
@@ -60,4 +71,5 @@ def generate_sample_run!
     ___puts_results(current_gen)
     puts "~~~~~~~~~"
   end
+
 end
